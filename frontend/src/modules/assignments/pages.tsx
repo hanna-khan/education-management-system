@@ -28,8 +28,8 @@ import {
 } from "@/mock/assignments";
 
 function useModuleLabel() {
-  const { institutionMode } = useApp();
-  return institutionMode === "school" ? "Homework" : "Assignments";
+  const { t } = useApp();
+  return t("homework_plural");
 }
 
 function statusBadge(status: string) {

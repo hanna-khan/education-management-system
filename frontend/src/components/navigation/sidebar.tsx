@@ -15,8 +15,8 @@ import { useState } from "react";
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { user, sidebarCollapsed, themePreset, institutionMode } = useApp();
-  const navigation = getNavigationForRole(user.role, institutionMode);
+  const { user, sidebarCollapsed, themePreset, institutionMode, enabledModules } = useApp();
+  const navigation = getNavigationForRole(user.role, institutionMode, enabledModules);
   const coloredSidebar = getThemePreset(themePreset).coloredSidebar;
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
     academics: true,

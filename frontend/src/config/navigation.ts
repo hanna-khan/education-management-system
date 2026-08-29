@@ -1,4 +1,6 @@
-import type { InstitutionType, NavGroup, UserRole } from "@/types";
+import { isNavItemEnabled } from "@/config/modules";
+import { NAV_TERM_KEYS, resolveTerm } from "@/config/terminology";
+import type { InstitutionType, NavGroup, NavItem, UserRole } from "@/types";
 
 const adminRoles: UserRole[] = [
   "super_admin",
@@ -6,6 +8,7 @@ const adminRoles: UserRole[] = [
   "principal",
   "dean",
   "hod",
+  "registrar",
 ];
 
 const elevatedRoles: UserRole[] = ["super_admin", "institution_admin", "platform_admin"];
@@ -72,6 +75,14 @@ export const INSTITUTION_NAV: NavGroup[] = [
         roles: [...adminRoles, "librarian"],
       },
       { id: "services", label: "Student Services", href: "/services", icon: "Inbox", roles: adminRoles },
+      {
+        id: "forms",
+        label: "Digital Forms",
+        href: "/forms",
+        icon: "ClipboardPen",
+        roles: [...adminRoles, "exam_officer"],
+        moduleId: "forms",
+      },
       { id: "certificates", label: "Certificates", href: "/certificates", icon: "ShieldCheck", roles: adminRoles },
       {
         id: "hostel",
@@ -342,6 +353,7 @@ export const STUDENT_NAV: NavGroup[] = [
       { id: "student-advising", label: "Advising", href: "/student/advising", icon: "MessageSquareHeart" },
       { id: "student-library", label: "Library", href: "/student/library", icon: "Library" },
       { id: "student-services", label: "Services", href: "/student/services", icon: "Inbox" },
+      { id: "student-forms", label: "Forms & Applications", href: "/student/forms", icon: "ClipboardPen" },
       { id: "student-certificates", label: "Certificates", href: "/student/certificates", icon: "ShieldCheck" },
       { id: "student-hostel", label: "Hostel", href: "/student/hostel", icon: "Bed", institutionTypes: ["university"] },
       { id: "student-transport", label: "Transport", href: "/student/transport", icon: "Bus" },
@@ -392,9 +404,22 @@ export const PARENT_NAV: NavGroup[] = [
   },
 ];
 
+function applyNavLabels(items: NavItem[], institutionType: InstitutionType): NavItem[] {
+  return items.map((item) => {
+    const termKey = NAV_TERM_KEYS[item.id];
+    const label = termKey ? resolveTerm(termKey, institutionType) : item.label;
+    return {
+      ...item,
+      label,
+      children: item.children ? applyNavLabels(item.children, institutionType) : undefined,
+    };
+  });
+}
+
 export function getNavigationForRole(
   role: UserRole,
   institutionType: InstitutionType = "university",
+  enabledModules: Record<string, boolean> = {},
 ): NavGroup[] {
   let groups: NavGroup[];
   switch (role) {
@@ -428,15 +453,19 @@ export function getNavigationForRole(
   return groups
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => {
-        if (item.roles && item.roles.length > 0) {
-          if (!elevatedRoles.includes(role) && !item.roles.includes(role)) return false;
-        }
-        if (item.institutionTypes && item.institutionTypes.length > 0) {
-          if (!item.institutionTypes.includes(institutionType)) return false;
-        }
-        return true;
-      }),
+      items: applyNavLabels(
+        group.items.filter((item) => {
+          if (item.roles && item.roles.length > 0) {
+            if (!elevatedRoles.includes(role) && !item.roles.includes(role)) return false;
+          }
+          if (item.institutionTypes && item.institutionTypes.length > 0) {
+            if (!item.institutionTypes.includes(institutionType)) return false;
+          }
+          if (!isNavItemEnabled(item.id, enabledModules)) return false;
+          return true;
+        }),
+        institutionType,
+      ),
     }))
     .filter((group) => group.items.length > 0);
 }

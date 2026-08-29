@@ -40,6 +40,8 @@ export interface Institution {
   city: string;
   studentCount: number;
   staffCount: number;
+  /** Optional demo blurb shown in the institution switcher */
+  demoNote?: string;
 }
 
 export interface User {
@@ -61,6 +63,8 @@ export interface NavItem {
   badge?: number;
   roles?: UserRole[];
   institutionTypes?: InstitutionType[];
+  /** When set, item is hidden if this module is disabled for the tenant */
+  moduleId?: string;
   children?: NavItem[];
 }
 

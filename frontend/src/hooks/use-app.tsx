@@ -10,6 +10,12 @@ import {
   type ReactNode,
 } from "react";
 import { DEFAULT_INSTITUTION_ID, DEMO_INSTITUTIONS } from "@/config/institutions";
+import { getDefaultEnabledModules } from "@/config/modules";
+import {
+  getRoleDisplayLabel,
+  resolveTerm,
+  type TermKey,
+} from "@/config/terminology";
 import {
   DEFAULT_THEME_PRESET,
   type ColorMode,
@@ -30,6 +36,8 @@ interface AppContextValue {
   institutionMode: InstitutionType;
   selectedChildId: string;
   selectedChild: ParentChild;
+  enabledModules: Record<string, boolean>;
+  demoRoleKey: keyof typeof DEMO_USERS;
   setRole: (roleKey: keyof typeof DEMO_USERS) => void;
   setInstitution: (institutionId: string) => void;
   setSelectedChildId: (childId: string) => void;
@@ -38,6 +46,10 @@ interface AppContextValue {
   toggleColorMode: () => void;
   toggleSidebar: () => void;
   setInstitutionMode: (mode: InstitutionType) => void;
+  setModuleEnabled: (moduleId: string, enabled: boolean) => void;
+  setEnabledModules: (modules: Record<string, boolean>) => void;
+  t: (key: TermKey) => string;
+  roleLabel: (role?: UserRole, demoKey?: string) => string;
   /** @deprecated Use colorMode */
   theme: ColorMode;
   /** @deprecated Use toggleColorMode */
@@ -55,6 +67,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [institutionMode, setInstitutionMode] = useState<InstitutionType>("university");
   const [selectedChildId, setSelectedChildIdState] = useState(mockParentChildren[0].id);
+  const [enabledModules, setEnabledModulesState] = useState<Record<string, boolean>>(() =>
+    getDefaultEnabledModules(DEFAULT_INSTITUTION_ID, "university"),
+  );
 
   useEffect(() => {
     const storedPreset = readStoredTheme();
@@ -77,7 +92,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const setInstitution = useCallback((id: string) => {
     setInstitutionId(id);
     const next = DEMO_INSTITUTIONS.find((item) => item.id === id);
-    if (next) setInstitutionMode(next.type);
+    if (next) {
+      setInstitutionMode(next.type);
+      setEnabledModulesState(getDefaultEnabledModules(next.id, next.type));
+    }
   }, []);
 
   const setSelectedChildId = useCallback((childId: string) => {
@@ -108,6 +126,25 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSidebarCollapsed((current) => !current);
   }, []);
 
+  const setModuleEnabled = useCallback((moduleId: string, enabled: boolean) => {
+    setEnabledModulesState((prev) => ({ ...prev, [moduleId]: enabled }));
+  }, []);
+
+  const setEnabledModules = useCallback((modules: Record<string, boolean>) => {
+    setEnabledModulesState(modules);
+  }, []);
+
+  const t = useCallback(
+    (key: TermKey) => resolveTerm(key, institutionMode),
+    [institutionMode],
+  );
+
+  const roleLabel = useCallback(
+    (role?: UserRole, demoKey?: string) =>
+      getRoleDisplayLabel(role ?? user.role, institutionMode, demoKey ?? roleKey),
+    [institutionMode, user.role, roleKey],
+  );
+
   const value = useMemo<AppContextValue>(
     () => ({
       user,
@@ -119,6 +156,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       institutionMode,
       selectedChildId,
       selectedChild,
+      enabledModules,
+      demoRoleKey: roleKey,
       setRole,
       setInstitution,
       setSelectedChildId,
@@ -127,6 +166,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       toggleColorMode,
       toggleSidebar,
       setInstitutionMode,
+      setModuleEnabled,
+      setEnabledModules,
+      t,
+      roleLabel,
       theme: colorMode,
       toggleTheme: toggleColorMode,
     }),
@@ -139,6 +182,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       institutionMode,
       selectedChildId,
       selectedChild,
+      enabledModules,
+      roleKey,
       setRole,
       setInstitution,
       setSelectedChildId,
@@ -146,6 +191,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setColorMode,
       toggleColorMode,
       toggleSidebar,
+      setModuleEnabled,
+      setEnabledModules,
+      t,
+      roleLabel,
     ],
   );
 

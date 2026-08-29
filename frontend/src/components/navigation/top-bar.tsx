@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { useApp, formatRoleLabel } from "@/hooks/use-app";
+import { useApp } from "@/hooks/use-app";
 import { mockNotifications, mockParentNotifications } from "@/mock/navigation-data";
 import { getNavigationForRole } from "@/config/navigation";
 import { getNavIcon } from "@/components/navigation/nav-icons";
@@ -48,6 +48,8 @@ export function TopBar({ onMobileMenuToggle }: TopBarProps) {
     toggleSidebar,
     sidebarCollapsed,
     themePreset,
+    roleLabel,
+    demoRoleKey,
   } = useApp();
   const [searchOpen, setSearchOpen] = useState(false);
   const notifications =
@@ -193,7 +195,7 @@ export function TopBar({ onMobileMenuToggle }: TopBarProps) {
                 </Avatar>
                 <div className="hidden text-left sm:block">
                   <p className="text-sm font-semibold leading-none text-[#3D3558]">{user.name}</p>
-                  <p className="mt-1 text-[11px] text-[#8B86A3]">{formatRoleLabel(user.role)}</p>
+                  <p className="mt-1 text-[11px] text-[#8B86A3]">{roleLabel(user.role, demoRoleKey)}</p>
                 </div>
               </button>
             </DropdownMenuTrigger>
@@ -236,9 +238,9 @@ export function MobileSidebarOverlay({
   open: boolean;
   onClose: () => void;
 }) {
-  const { user, themePreset, institutionMode } = useApp();
+  const { user, themePreset, institutionMode, enabledModules } = useApp();
   const pathname = usePathname();
-  const navigation = getNavigationForRole(user.role, institutionMode);
+  const navigation = getNavigationForRole(user.role, institutionMode, enabledModules);
   const coloredSidebar = Boolean(getThemePreset(themePreset).coloredSidebar);
 
   return (

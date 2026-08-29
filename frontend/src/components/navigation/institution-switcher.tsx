@@ -115,6 +115,9 @@ export function InstitutionSwitcher({
                   {item.status}
                 </Badge>
               </div>
+              {item.demoNote ? (
+                <p className="mt-1.5 text-[11px] leading-snug text-[var(--muted)]">{item.demoNote}</p>
+              ) : null}
             </div>
           </DropdownMenuItem>
         ))}

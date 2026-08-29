@@ -78,13 +78,13 @@ function useClubsTabs() {
 
 export function ClubsDashboardPage() {
   const tabs = useClubsTabs();
-  const { institutionMode } = useApp();
+  const { institutionMode, t, institution } = useApp();
 
   return (
     <ModuleHub
-      title="Clubs, Societies & Activities"
-      description="NED University — IEEE, Robotics, Debating, Sports, and student organizations across Karachi campus."
-      breadcrumbs={breadcrumbs}
+      title={t("clubs")}
+      description={`${institution.shortName} — student organizations and activities.`}
+      breadcrumbs={[{ label: "Dashboard", href: "/dashboard" }, { label: t("clubs") }]}
       tabs={tabs}
       actions={
         <MockActionButton

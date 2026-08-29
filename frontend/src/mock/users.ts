@@ -17,7 +17,16 @@ export const DEMO_USERS: Record<string, User> = {
     role: "principal",
     institutionId: "inst-ned-demo",
     department: "Administration",
-    title: "Principal",
+    title: "Vice Chancellor",
+  },
+  registrar: {
+    id: "user-registrar",
+    name: "Prof. Nadia Sheikh",
+    email: "nadia.sheikh@neddemo.edu.pk",
+    role: "registrar",
+    institutionId: "inst-ned-demo",
+    department: "Registrar Office",
+    title: "Registrar",
   },
   teacher: {
     id: "user-teacher",
@@ -26,7 +35,7 @@ export const DEMO_USERS: Record<string, User> = {
     role: "teacher",
     institutionId: "inst-ned-demo",
     department: "Computer Science",
-    title: "Assistant Professor",
+    title: "Assistant Professor · Class Advisor",
   },
   student: {
     id: "user-student",

@@ -20,6 +20,7 @@ import { MockActionButton, MockToastButton, MOCK_FORMS } from "@/components/shar
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SETTINGS_TABS, mockRoles, mockPermissions } from "@/mock/portals";
+import { MODULE_CATALOG } from "@/config/modules";
 import { useApp } from "@/hooks/use-app";
 import { formatNumber } from "@/lib/utils";
 
@@ -490,45 +491,8 @@ export function SettingsSubscriptionPage() {
   );
 }
 
-const MODULE_CATALOG = [
-  { id: "admissions", name: "Admissions", category: "Core", university: true, school: true, enabled: true },
-  { id: "academics", name: "Academics", category: "Core", university: true, school: true, enabled: true },
-  { id: "attendance", name: "Attendance", category: "Core", university: true, school: true, enabled: true },
-  { id: "exams", name: "Exams & Results", category: "Core", university: true, school: true, enabled: true },
-  { id: "fees", name: "Fees & Finance", category: "Core", university: true, school: true, enabled: true },
-  { id: "library", name: "Library", category: "Campus", university: true, school: true, enabled: true },
-  { id: "lms", name: "LMS / Learning", category: "Academic", university: true, school: true, enabled: true },
-  { id: "assignments", name: "Assignments / Homework", category: "Academic", university: true, school: true, enabled: true },
-  { id: "degree_planning", name: "Degree Planning", category: "Academic", university: true, school: false, enabled: true },
-  { id: "advising", name: "Student Advising", category: "Academic", university: true, school: false, enabled: true },
-  { id: "student_services", name: "One-Window Services", category: "Campus", university: true, school: true, enabled: true },
-  { id: "certificates", name: "Documents & Certificates", category: "Campus", university: true, school: true, enabled: true },
-  { id: "hostel", name: "Hostel", category: "Campus", university: true, school: false, enabled: true },
-  { id: "transport", name: "Transport", category: "Campus", university: true, school: true, enabled: true },
-  { id: "health", name: "Health / Clinic", category: "Campus", university: true, school: true, enabled: true },
-  { id: "discipline", name: "Discipline", category: "Campus", university: true, school: true, enabled: true },
-  { id: "career", name: "Career & Internship", category: "Engagement", university: true, school: false, enabled: true },
-  { id: "alumni", name: "Alumni", category: "Engagement", university: true, school: false, enabled: true },
-  { id: "clubs", name: "Clubs / Societies", category: "Engagement", university: true, school: true, enabled: true },
-  { id: "facilities", name: "Facility Management", category: "Operations", university: true, school: true, enabled: true },
-  { id: "maintenance", name: "Maintenance", category: "Operations", university: true, school: true, enabled: true },
-  { id: "it_helpdesk", name: "IT Helpdesk", category: "Operations", university: true, school: true, enabled: true },
-  { id: "surveys", name: "Survey Builder", category: "Engagement", university: true, school: true, enabled: true },
-  { id: "quality", name: "Quality Assurance", category: "Enterprise", university: true, school: false, enabled: true },
-  { id: "accreditation", name: "Accreditation", category: "Enterprise", university: true, school: false, enabled: true },
-  { id: "inventory", name: "Inventory", category: "Enterprise", university: true, school: true, enabled: true },
-  { id: "assets", name: "Asset Management", category: "Enterprise", university: true, school: true, enabled: true },
-  { id: "procurement", name: "Procurement", category: "Enterprise", university: true, school: true, enabled: true },
-  { id: "emergency", name: "Emergency & Safety", category: "Enterprise", university: true, school: true, enabled: true },
-  { id: "visitors", name: "Visitor Management", category: "Enterprise", university: true, school: true, enabled: true },
-  { id: "ai", name: "Zendrock AI", category: "Enterprise", university: true, school: true, enabled: true },
-];
-
 export function SettingsModulesPage() {
-  const { institution, institutionMode } = useApp();
-  const [enabled, setEnabled] = useState<Record<string, boolean>>(
-    Object.fromEntries(MODULE_CATALOG.map((m) => [m.id, m.enabled])),
-  );
+  const { institution, institutionMode, enabledModules, setModuleEnabled, t } = useApp();
 
   const visible = MODULE_CATALOG.filter((m) =>
     institutionMode === "university" ? m.university : m.school,
@@ -537,13 +501,13 @@ export function SettingsModulesPage() {
   return (
     <ModuleHub
       title="Enabled Modules"
-      description={`Configure which modules are available for ${institution.name}. Changes are mock-only until the Laravel backend is connected.`}
+      description={`Toggle modules for ${institution.name}. Disabled modules disappear from the sidebar immediately (demo).`}
       breadcrumbs={[...breadcrumbs.slice(0, -1), { label: "Settings", href: "/settings" }, { label: "Modules" }]}
       tabs={SETTINGS_TABS}
       actions={
         <MockToastButton
           label="Save module configuration"
-          message="Module configuration saved (demo)."
+          message="Module configuration saved for this demo session."
           size="sm"
           variant="default"
         />
@@ -551,11 +515,14 @@ export function SettingsModulesPage() {
     >
       <div className="mb-4 flex flex-wrap gap-2">
         <Badge variant="info" className="capitalize">
-          {institutionMode} mode
+          {institutionMode} · {t("institution")}
         </Badge>
-        <Badge variant="outline">{visible.filter((m) => enabled[m.id]).length} enabled</Badge>
+        <Badge variant="outline">{visible.filter((m) => enabledModules[m.id]).length} enabled</Badge>
         <Badge variant="outline">{visible.length} available for this type</Badge>
       </div>
+      <p className="mb-4 text-sm text-[var(--muted)]">
+        Switching institution resets modules to that tenant&apos;s defaults. Try Crescent (school) vs NED (university).
+      </p>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {visible.map((mod) => (
           <Card key={mod.id} className="border-[var(--border-subtle)]">
@@ -567,16 +534,16 @@ export function SettingsModulesPage() {
               <button
                 type="button"
                 role="switch"
-                aria-checked={enabled[mod.id]}
+                aria-checked={enabledModules[mod.id]}
                 aria-label={`Toggle ${mod.name}`}
-                onClick={() => setEnabled((prev) => ({ ...prev, [mod.id]: !prev[mod.id] }))}
+                onClick={() => setModuleEnabled(mod.id, !enabledModules[mod.id])}
                 className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
-                  enabled[mod.id] ? "bg-[var(--brand-primary)]" : "bg-[var(--border)]"
+                  enabledModules[mod.id] ? "bg-[var(--brand-primary)]" : "bg-[var(--border)]"
                 }`}
               >
                 <span
                   className={`absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow transition-transform ${
-                    enabled[mod.id] ? "translate-x-5" : "translate-x-0"
+                    enabledModules[mod.id] ? "translate-x-5" : "translate-x-0"
                   }`}
                 />
               </button>

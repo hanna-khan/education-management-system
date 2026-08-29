@@ -22,6 +22,8 @@ export const TRANSPORT_TABS = [
   { id: "conductors", label: "Conductors", href: "/transport/conductors" },
   { id: "students", label: "Students", href: "/transport/students" },
   { id: "assignments", label: "Assignments", href: "/transport/assignments" },
+  { id: "passes", label: "Monthly Passes", href: "/transport/passes" },
+  { id: "tokens", label: "Tokens (Topan)", href: "/transport/tokens" },
   { id: "fees", label: "Fees", href: "/transport/fees" },
   { id: "maintenance", label: "Maintenance", href: "/transport/maintenance" },
   { id: "tracking", label: "Live Tracking", href: "/transport/tracking" },
@@ -130,3 +132,113 @@ export function getTransportRoute(id: string) {
 export function getTransportVehicle(id: string) {
   return mockVehicles.find((v) => v.id === id);
 }
+
+export interface TransportMonthlyPass {
+  id: string;
+  passCode: string;
+  studentId: string;
+  studentName: string;
+  routeName: string;
+  month: string;
+  amount: number;
+  status: "active" | "pending_payment" | "expired" | "revoked";
+  issuedAt?: string;
+  validUntil: string;
+  qrCode: string;
+}
+
+export interface TransportTokenPack {
+  id: string;
+  name: string;
+  rides: number;
+  price: number;
+  validityDays: number;
+  popular?: boolean;
+}
+
+export interface TransportTokenBalance {
+  studentId: string;
+  studentName: string;
+  remainingRides: number;
+  packName: string;
+  purchasedAt: string;
+  expiresAt: string;
+  lastUsedAt?: string;
+}
+
+export interface TransportTokenSale {
+  id: string;
+  studentName: string;
+  packName: string;
+  rides: number;
+  amount: number;
+  purchasedAt: string;
+  paymentRef: string;
+}
+
+export const mockTokenPacks: TransportTokenPack[] = [
+  { id: "pack-2", name: "2-Ride Topan", rides: 2, price: 200, validityDays: 30 },
+  { id: "pack-5", name: "5-Ride Topan", rides: 5, price: 450, validityDays: 45, popular: true },
+  { id: "pack-10", name: "10-Ride Topan", rides: 10, price: 800, validityDays: 60 },
+];
+
+export const mockMonthlyPasses: TransportMonthlyPass[] = [
+  {
+    id: "mp-001",
+    passCode: "NED-BUS-SEP-0421",
+    studentId: "CS-2022-0421",
+    studentName: "Ahmed Khan",
+    routeName: "Gulshan — NED Campus",
+    month: "September 2026",
+    amount: 4500,
+    status: "active",
+    issuedAt: "2026-08-28",
+    validUntil: "2026-09-30",
+    qrCode: "QR-BUS-MP-0421",
+  },
+  {
+    id: "mp-002",
+    passCode: "NED-BUS-SEP-0245",
+    studentId: "EE-2023-0245",
+    studentName: "Sara Ahmed",
+    routeName: "North Nazimabad — NED Campus",
+    month: "September 2026",
+    amount: 4200,
+    status: "pending_payment",
+    validUntil: "2026-09-30",
+    qrCode: "QR-BUS-MP-0245",
+  },
+  {
+    id: "mp-003",
+    passCode: "NED-BUS-AUG-0088",
+    studentId: "CE-2024-0088",
+    studentName: "Hamza Iqbal",
+    routeName: "Malir — NED Campus",
+    month: "August 2026",
+    amount: 5000,
+    status: "expired",
+    issuedAt: "2026-07-29",
+    validUntil: "2026-08-31",
+    qrCode: "QR-BUS-MP-0088",
+  },
+];
+
+export const mockTokenBalances: TransportTokenBalance[] = [
+  {
+    studentId: "CS-2022-0421",
+    studentName: "Ahmed Khan",
+    remainingRides: 3,
+    packName: "5-Ride Topan",
+    purchasedAt: "2026-08-20",
+    expiresAt: "2026-10-04",
+    lastUsedAt: "2026-08-27 07:12",
+  },
+];
+
+export const mockTokenSales: TransportTokenSale[] = [
+  { id: "tsale-1", studentName: "Ahmed Khan", packName: "5-Ride Topan", rides: 5, amount: 450, purchasedAt: "2026-08-20", paymentRef: "PAY-TR-9921" },
+  { id: "tsale-2", studentName: "Hira Ali", packName: "2-Ride Topan", rides: 2, amount: 200, purchasedAt: "2026-08-22", paymentRef: "PAY-TR-9934" },
+  { id: "tsale-3", studentName: "Bilal Hussain", packName: "10-Ride Topan", rides: 10, amount: 800, purchasedAt: "2026-08-25", paymentRef: "PAY-TR-9950" },
+];
+
+export const monthlyPassFeePkr = 4500;

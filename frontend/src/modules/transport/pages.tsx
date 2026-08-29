@@ -7,6 +7,7 @@ import {
   MapPin,
   Navigation,
   Route,
+  Ticket,
   User,
   Users,
   Wrench,
@@ -23,16 +24,22 @@ import {
   mockAssignments,
   mockConductors,
   mockDrivers,
+  mockMonthlyPasses,
   mockRoutes,
   mockStops,
+  mockTokenBalances,
+  mockTokenPacks,
+  mockTokenSales,
   mockTransportFees,
   mockTransportMaintenance,
   mockTransportStudents,
   mockVehicles,
+  monthlyPassFeePkr,
   parentTransportSummary,
   transportStats,
 } from "@/mock/transport";
 import { formatCurrency, formatNumber } from "@/lib/utils";
+import { useToast } from "@/components/shared/toast";
 
 const breadcrumbs = [{ label: "Dashboard", href: "/dashboard" }, { label: "Transport" }];
 
@@ -56,6 +63,9 @@ function statusBadge(status: string) {
     on_route: "info",
     arrived: "success",
     not_started: "outline",
+    pending_payment: "warning",
+    expired: "outline",
+    revoked: "error",
   };
   return (
     <Badge variant={map[status] ?? "outline"} className="capitalize">
@@ -410,13 +420,126 @@ export function TransportTrackingPage() {
   );
 }
 
+export function TransportMonthlyPassesPage() {
+  return (
+    <ModuleHub
+      title="Monthly transport passes"
+      description="Students pay monthly fee → transport ID / QR pass issued for the selected route."
+      breadcrumbs={[...breadcrumbs, { label: "Monthly Passes" }]}
+      tabs={TRANSPORT_TABS}
+      actions={
+        <MockActionButton
+          label="Issue pass"
+          title="Issue monthly pass"
+          fields={[
+            { name: "student", label: "Student ID", required: true, placeholder: "CS-2022-0421" },
+            { name: "route", label: "Route", type: "select", options: mockRoutes.map((r) => r.name), required: true },
+            { name: "month", label: "Month", type: "select", options: ["September 2026", "October 2026"], required: true },
+          ]}
+          submitLabel="Issue"
+          successMessage="Monthly pass issued (demo)."
+        />
+      }
+    >
+      <div className="mb-4 grid gap-4 sm:grid-cols-3">
+        <KpiCard label="Active passes" value={mockMonthlyPasses.filter((p) => p.status === "active").length} icon={Ticket} />
+        <KpiCard label="Pending payment" value={mockMonthlyPasses.filter((p) => p.status === "pending_payment").length} icon={Users} />
+        <KpiCard label="Monthly fee (Gulshan)" value={formatCurrency(monthlyPassFeePkr)} icon={Bus} />
+      </div>
+      <SimpleTable
+        columns={["Pass", "Student", "Route", "Month", "Amount", "Valid until", "Status"]}
+        rows={mockMonthlyPasses.map((p) => [
+          p.passCode,
+          p.studentName,
+          p.routeName,
+          p.month,
+          formatCurrency(p.amount),
+          p.validUntil,
+          statusBadge(p.status),
+        ])}
+      />
+    </ModuleHub>
+  );
+}
+
+export function TransportTokensPage() {
+  return (
+    <ModuleHub
+      title="Transport tokens (Topan)"
+      description="Pay-per-ride packs for occasional travellers — buy 2, 5, or 10 rides instead of a monthly plan."
+      breadcrumbs={[...breadcrumbs, { label: "Tokens" }]}
+      tabs={TRANSPORT_TABS}
+    >
+      <div className="grid gap-4 sm:grid-cols-3">
+        {mockTokenPacks.map((pack) => (
+          <Card key={pack.id} className={pack.popular ? "border-[var(--brand-primary)]" : undefined}>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">{pack.name}</CardTitle>
+                {pack.popular ? <Badge variant="info">Popular</Badge> : null}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-semibold tracking-tight">{formatCurrency(pack.price)}</p>
+              <p className="mt-1 text-sm text-[var(--muted)]">{pack.rides} rides · valid {pack.validityDays} days</p>
+              <MockToastButton
+                className="mt-4"
+                label="Sell pack (demo)"
+                message={`${pack.name} sold (demo).`}
+                size="sm"
+              />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Card className="mt-6">
+        <CardHeader><CardTitle>Recent token sales</CardTitle></CardHeader>
+        <CardContent>
+          <SimpleTable
+            columns={["Student", "Pack", "Rides", "Amount", "Payment", "Purchased"]}
+            rows={mockTokenSales.map((s) => [
+              s.studentName,
+              s.packName,
+              String(s.rides),
+              formatCurrency(s.amount),
+              s.paymentRef,
+              s.purchasedAt,
+            ])}
+          />
+        </CardContent>
+      </Card>
+
+      <Card className="mt-6">
+        <CardHeader><CardTitle>Active balances</CardTitle></CardHeader>
+        <CardContent>
+          <SimpleTable
+            columns={["Student", "Pack", "Rides left", "Expires", "Last used"]}
+            rows={mockTokenBalances.map((b) => [
+              b.studentName,
+              b.packName,
+              String(b.remainingRides),
+              b.expiresAt,
+              b.lastUsedAt ?? "—",
+            ])}
+          />
+        </CardContent>
+      </Card>
+    </ModuleHub>
+  );
+}
+
 export function StudentTransportPage() {
+  const { toast } = useToast();
   const assignment = mockAssignments.find((a) => a.studentId === "CS-2022-0421");
   const fees = mockTransportFees.filter((f) => f.studentId === "CS-2022-0421");
+  const monthly = mockMonthlyPasses.find((p) => p.studentId === "CS-2022-0421" && p.status === "active");
+  const tokens = mockTokenBalances.find((b) => b.studentId === "CS-2022-0421");
+
   return (
     <ModuleHub
       title="My Transport"
-      description="Your assigned bus route and pickup details."
+      description="Monthly van pass or Topan ride tokens — pay online, get QR boarding."
       breadcrumbs={[{ label: "Student", href: "/student/dashboard" }, { label: "Transport" }]}
       actions={
         <Button asChild size="sm" variant="outline">
@@ -424,9 +547,72 @@ export function StudentTransportPage() {
         </Button>
       }
     >
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Monthly plan</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            {monthly ? (
+              <>
+                <InfoCard label="Pass" value={monthly.passCode} sub={`${monthly.routeName} · until ${monthly.validUntil}`} />
+                <Badge variant="success">Active</Badge>
+                <p className="text-[var(--muted)]">Show QR {monthly.qrCode} to the conductor when boarding.</p>
+              </>
+            ) : (
+              <p className="text-[var(--muted)]">No active monthly pass.</p>
+            )}
+            <div className="flex flex-wrap gap-2 pt-2">
+              <Button
+                size="sm"
+                onClick={() => toast(`Monthly fee ${formatCurrency(monthlyPassFeePkr)} paid — pass pending issuance (demo).`)}
+              >
+                Pay monthly fee
+              </Button>
+              <Button asChild size="sm" variant="outline">
+                <Link href="/student/forms/camp-bus-monthly/apply">Apply via Forms</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Topan tokens (occasional rides)</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            {tokens ? (
+              <InfoCard
+                label="Balance"
+                value={`${tokens.remainingRides} rides left`}
+                sub={`${tokens.packName} · expires ${tokens.expiresAt}`}
+              />
+            ) : (
+              <p className="text-[var(--muted)]">No token balance — buy a small pack for a few trips.</p>
+            )}
+            <div className="grid gap-2">
+              {mockTokenPacks.map((pack) => (
+                <button
+                  key={pack.id}
+                  type="button"
+                  onClick={() => toast(`${pack.name} purchased for ${formatCurrency(pack.price)} (demo).`)}
+                  className="flex items-center justify-between rounded-lg border border-[var(--border-subtle)] px-3 py-2 text-left hover:bg-[var(--surface-muted)]"
+                >
+                  <span>
+                    {pack.name}
+                    {pack.popular ? <Badge className="ml-2" variant="info">Best value</Badge> : null}
+                  </span>
+                  <span className="font-medium">{formatCurrency(pack.price)}</span>
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
       {assignment ? (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <InfoCard label="Route" value={assignment.routeName} />
             <InfoCard label="Stop" value={assignment.stopName} />
             <InfoCard label="Vehicle" value={assignment.vehicleReg} />
@@ -441,13 +627,7 @@ export function StudentTransportPage() {
             </CardContent>
           </Card>
         </>
-      ) : (
-        <Card>
-          <CardContent className="p-6 text-sm text-[var(--muted)]">
-            No transport assignment found. Apply via Student Services or contact the transport office.
-          </CardContent>
-        </Card>
-      )}
+      ) : null}
     </ModuleHub>
   );
 }
@@ -471,7 +651,7 @@ export function ParentTransportPage() {
         <InfoCard label="Drop-off" value={t.dropStop} sub={t.dropTime} />
       </div>
       <Card className="mt-6">
-        <CardHeader><CardTitle>Today's status</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Today&apos;s status</CardTitle></CardHeader>
         <CardContent className="text-sm text-[var(--muted)]">
           <p>Bus {t.vehicleReg} is currently {t.status === "on_route" ? "en route to campus" : t.status.replace(/_/g, " ")}.</p>
           <p className="mt-2">Expected arrival at campus: {t.dropTime}. For delays, contact transport office at +92-21-99261200.</p>
@@ -490,7 +670,7 @@ export function ParentTransportPage() {
         <CardHeader><CardTitle>Safety & policies</CardTitle></CardHeader>
         <CardContent className="space-y-2 text-sm text-[var(--muted)]">
           <p>• Students must be at the stop 5 minutes before pickup time</p>
-          <p>• Bus passes are mandatory — issued by transport office</p>
+          <p>• Monthly QR pass or Topan tokens are mandatory for boarding</p>
           <p>• Report route changes at least 2 weeks in advance</p>
           <p>• Emergency contact: NED Transport Office +92-21-99261200</p>
         </CardContent>

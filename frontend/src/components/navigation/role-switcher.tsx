@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { DEMO_USERS } from "@/mock/users";
-import { useApp, formatRoleLabel } from "@/hooks/use-app";
+import { useApp } from "@/hooks/use-app";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,18 +14,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 
-const ROLE_LABELS: Record<keyof typeof DEMO_USERS, string> = {
-  admin: "Institution Admin",
-  principal: "Principal",
-  teacher: "Teacher",
-  student: "Student",
-  parent: "Parent",
-  platform: "Platform Admin",
-};
-
 const ROLE_HOME: Record<keyof typeof DEMO_USERS, string> = {
   admin: "/dashboard",
   principal: "/dashboard",
+  registrar: "/forms",
   teacher: "/teacher/dashboard",
   student: "/student/dashboard",
   parent: "/parent/dashboard",
@@ -34,7 +26,7 @@ const ROLE_HOME: Record<keyof typeof DEMO_USERS, string> = {
 
 export function RoleSwitcher() {
   const router = useRouter();
-  const { user, setRole } = useApp();
+  const { user, setRole, roleLabel, demoRoleKey, institutionMode } = useApp();
 
   return (
     <DropdownMenu>
@@ -46,12 +38,17 @@ export function RoleSwitcher() {
           <span className="rounded-lg bg-gradient-to-r from-[#6B58F6] to-[#8C4AF2] px-1.5 py-0.5 text-[10px] font-bold text-white">
             Demo
           </span>
-          <span className="max-w-[140px] truncate">{formatRoleLabel(user.role)}</span>
+          <span className="max-w-[140px] truncate">{roleLabel(user.role, demoRoleKey)}</span>
           <ChevronDown className="size-3.5 text-[#8B86A3]" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56 rounded-2xl">
-        <DropdownMenuLabel>Switch demo role</DropdownMenuLabel>
+      <DropdownMenuContent align="end" className="w-64 rounded-2xl">
+        <DropdownMenuLabel>
+          Switch demo role
+          <span className="mt-0.5 block text-[10px] font-normal text-[var(--muted)] capitalize">
+            Labels follow {institutionMode} terminology
+          </span>
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {(Object.keys(DEMO_USERS) as Array<keyof typeof DEMO_USERS>).map((key) => (
           <DropdownMenuItem
@@ -62,8 +59,8 @@ export function RoleSwitcher() {
             }}
           >
             <div className="flex w-full items-center justify-between gap-2">
-              <span>{ROLE_LABELS[key]}</span>
-              {DEMO_USERS[key].role === user.role ? (
+              <span>{roleLabel(DEMO_USERS[key].role, key)}</span>
+              {DEMO_USERS[key].role === user.role && demoRoleKey === key ? (
                 <Badge variant="info">Active</Badge>
               ) : null}
             </div>

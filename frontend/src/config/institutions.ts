@@ -13,6 +13,7 @@ export const DEMO_INSTITUTIONS: Institution[] = [
     city: "Karachi",
     studentCount: 8426,
     staffCount: 386,
+    demoNote: "Full university pack — forms, convocation, transport tokens, hostel.",
   },
   {
     id: "inst-kec",
@@ -26,6 +27,7 @@ export const DEMO_INSTITUTIONS: Institution[] = [
     city: "Karachi",
     studentCount: 4210,
     staffCount: 198,
+    demoNote: "University without hostel or alumni modules.",
   },
   {
     id: "inst-crescent",
@@ -39,6 +41,7 @@ export const DEMO_INSTITUTIONS: Institution[] = [
     city: "Lahore",
     studentCount: 1840,
     staffCount: 112,
+    demoNote: "School pack — Principal labels; no hostel/career; maintenance off.",
   },
 ];
 
