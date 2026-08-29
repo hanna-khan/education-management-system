@@ -42,7 +42,17 @@ const tip = {
   fontSize: 12,
 };
 
-export function SchoolPerformanceChart({ className }: { className?: string }) {
+export function SchoolPerformanceChart({
+  className,
+  title = "School Performance",
+  subtitle = "Students & Teachers trend",
+  teachersLabel = "Teachers",
+}: {
+  className?: string;
+  title?: string;
+  subtitle?: string;
+  teachersLabel?: string;
+}) {
   const [period, setPeriod] = useState<"weekly" | "monthly">("weekly");
   const [series, setSeries] = useState({ students: true, teachers: true });
 
@@ -70,14 +80,14 @@ export function SchoolPerformanceChart({ className }: { className?: string }) {
     >
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="text-base font-semibold text-[var(--foreground)]">School Performance</h3>
-          <p className="mt-0.5 text-xs text-[var(--muted)]">Students & Teachers trend</p>
+          <h3 className="text-base font-semibold text-[var(--foreground)]">{title}</h3>
+          <p className="mt-0.5 text-xs text-[var(--muted)]">{subtitle}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <SeriesToggle
             series={[
               { key: "students", label: "Students", color: CHART_COLORS.purple },
-              { key: "teachers", label: "Teachers", color: CHART_COLORS.teal },
+              { key: "teachers", label: teachersLabel, color: CHART_COLORS.teal },
             ]}
             active={series}
             onChange={toggleSeries}
@@ -126,7 +136,7 @@ export function SchoolPerformanceChart({ className }: { className?: string }) {
               <Line
                 type="monotone"
                 dataKey="teachers"
-                name="Teachers"
+                name={teachersLabel}
                 stroke={CHART_COLORS.teal}
                 strokeWidth={3}
                 dot={{ r: 5, fill: CHART_COLORS.teal, strokeWidth: 0 }}

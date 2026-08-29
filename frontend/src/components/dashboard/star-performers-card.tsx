@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Star, TrendingDown, TrendingUp, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useApp } from "@/hooks/use-app";
 import { PeriodToggle } from "@/components/dashboard/period-toggle";
 import {
   Select,
@@ -20,6 +21,7 @@ import {
   filterPerformers,
   type PerformerEntry,
 } from "@/mock/performers";
+import { universityPrograms, universityStarWeekly } from "@/mock/dashboard-context";
 
 const TREND_ICON = {
   up: TrendingUp,
@@ -67,30 +69,46 @@ function PerformerRow({ entry, showStar }: { entry: PerformerEntry; showStar?: b
   );
 }
 
+function usePerformerFilters() {
+  const { institutionMode, t } = useApp();
+  const isUniversity = institutionMode === "university";
+  const filters = isUniversity ? universityPrograms : schoolClasses;
+  const allLabel = filters[0];
+  const filterPlaceholder = isUniversity ? "Select programme" : "Select class";
+  const classSubtitle = isUniversity ? "Top marks by programme" : "Top marks by class";
+  return { isUniversity, filters, allLabel, filterPlaceholder, classSubtitle, t };
+}
+
 export function StarStudentsCard({ className }: { className?: string }) {
+  const { isUniversity, filters, allLabel, filterPlaceholder, classSubtitle } = usePerformerFilters();
   const [period, setPeriod] = useState<"weekly" | "monthly">("weekly");
-  const [classFilter, setClassFilter] = useState("All Classes");
+  const [classFilter, setClassFilter] = useState(allLabel);
 
   const entries = useMemo(() => {
+    if (isUniversity) {
+      return classFilter === allLabel
+        ? universityStarWeekly
+        : universityStarWeekly.filter((e) => e.className === classFilter);
+    }
     const source = period === "weekly" ? starStudentsWeekly : starStudentsMonthly;
     return filterPerformers(source, classFilter);
-  }, [period, classFilter]);
+  }, [period, classFilter, isUniversity, allLabel]);
 
   return (
     <div className={cn("rounded-[1.25rem] bg-[var(--surface)] p-5 shadow-[var(--shadow-sm)]", className)}>
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-base font-semibold">Star Students</h3>
-          <p className="mt-0.5 text-xs text-[var(--muted)]">Top marks by class</p>
+          <h3 className="text-base font-semibold">Star students</h3>
+          <p className="mt-0.5 text-xs text-[var(--muted)]">{classSubtitle}</p>
         </div>
-        <PeriodToggle value={period} onChange={setPeriod} />
+        {!isUniversity ? <PeriodToggle value={period} onChange={setPeriod} /> : null}
       </div>
       <Select value={classFilter} onValueChange={setClassFilter}>
         <SelectTrigger className="mb-3 h-8 rounded-lg text-xs">
-          <SelectValue placeholder="Select class" />
+          <SelectValue placeholder={filterPlaceholder} />
         </SelectTrigger>
         <SelectContent>
-          {schoolClasses.map((c) => (
+          {filters.map((c) => (
             <SelectItem key={c} value={c}>{c}</SelectItem>
           ))}
         </SelectContent>
@@ -99,7 +117,7 @@ export function StarStudentsCard({ className }: { className?: string }) {
         {entries.length ? (
           entries.map((entry) => <PerformerRow key={entry.id} entry={entry} showStar />)
         ) : (
-          <p className="py-6 text-center text-sm text-[var(--muted)]">No students in this class for the selected period.</p>
+          <p className="py-6 text-center text-sm text-[var(--muted)]">No students for this filter.</p>
         )}
       </div>
     </div>
@@ -107,29 +125,37 @@ export function StarStudentsCard({ className }: { className?: string }) {
 }
 
 export function BestPerformersCard({ className }: { className?: string }) {
+  const { isUniversity, filters, allLabel, filterPlaceholder, t } = usePerformerFilters();
   const [period, setPeriod] = useState<"weekly" | "monthly">("weekly");
-  const [classFilter, setClassFilter] = useState("All Classes");
+  const [classFilter, setClassFilter] = useState(allLabel);
 
   const entries = useMemo(() => {
+    if (isUniversity) {
+      return classFilter === allLabel
+        ? universityStarWeekly
+        : universityStarWeekly.filter((e) => e.className === classFilter);
+    }
     const source = period === "weekly" ? bestPerformersWeekly : bestPerformersMonthly;
     return filterPerformers(source, classFilter);
-  }, [period, classFilter]);
+  }, [period, classFilter, isUniversity, allLabel]);
 
   return (
     <div className={cn("rounded-[1.25rem] bg-[var(--surface)] p-5 shadow-[var(--shadow-sm)]", className)}>
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h3 className="text-base font-semibold">Best Performers</h3>
-          <p className="mt-0.5 text-xs text-[var(--muted)]">Weekly & monthly leaderboard</p>
+          <h3 className="text-base font-semibold">Best performers</h3>
+          <p className="mt-0.5 text-xs text-[var(--muted)]">
+            {isUniversity ? `${t("grade_level")} leaderboard` : "Weekly & monthly leaderboard"}
+          </p>
         </div>
-        <PeriodToggle value={period} onChange={setPeriod} />
+        {!isUniversity ? <PeriodToggle value={period} onChange={setPeriod} /> : null}
       </div>
       <Select value={classFilter} onValueChange={setClassFilter}>
         <SelectTrigger className="mb-3 h-8 rounded-lg text-xs">
-          <SelectValue placeholder="Select class" />
+          <SelectValue placeholder={filterPlaceholder} />
         </SelectTrigger>
         <SelectContent>
-          {schoolClasses.map((c) => (
+          {filters.map((c) => (
             <SelectItem key={c} value={c}>{c}</SelectItem>
           ))}
         </SelectContent>
@@ -138,7 +164,7 @@ export function BestPerformersCard({ className }: { className?: string }) {
         {entries.length ? (
           entries.map((entry) => <PerformerRow key={entry.id} entry={entry} showStar />)
         ) : (
-          <p className="py-6 text-center text-sm text-[var(--muted)]">No performers in this class for the selected period.</p>
+          <p className="py-6 text-center text-sm text-[var(--muted)]">No performers for this filter.</p>
         )}
       </div>
     </div>

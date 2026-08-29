@@ -32,7 +32,7 @@ import { mockParentAlerts, mockParentChildren, mockParentFeeInstallments, mockSu
 import { mockNotices } from "@/mock/communication";
 
 export function ParentPortalDashboard() {
-  const { user, selectedChildId, setSelectedChildId, selectedChild } = useApp();
+  const { user, selectedChildId, setSelectedChildId, selectedChild, institution, t } = useApp();
   const { events } = useSchoolEvents();
   const firstName = user.name.split(" ")[0];
   const child = selectedChild;
@@ -48,7 +48,7 @@ export function ParentPortalDashboard() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{getGreeting(firstName)}</h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
-            Track attendance, results, fees, and school updates for your children.
+            {institution.shortName} {t("parent").toLowerCase()} portal — follow {child.name}&apos;s progress.
           </p>
         </div>
         {unreadAlerts > 0 ? (
@@ -145,7 +145,7 @@ export function ParentPortalDashboard() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <DashboardUpcomingEvents />
-        <SchoolEventCalendar events={events} />
+        <SchoolEventCalendar events={events} title={`${institution.shortName} calendar`} />
         <div className="rounded-[1.25rem] bg-[var(--surface)] p-5 shadow-[var(--shadow-sm)]">
           <h3 className="mb-4 text-base font-semibold">Latest notices</h3>
           <div className="space-y-3">

@@ -71,11 +71,13 @@ export function SchoolEventCalendar({
   events,
   today = new Date(2026, 7, 22),
   className,
+  title = "School Event Calendar",
 }: {
   events: SchoolEvent[];
   today?: Date;
   studentCount?: number;
   className?: string;
+  title?: string;
 }) {
   const [viewDate, setViewDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1));
   const [selectedDay, setSelectedDay] = useState<{ day: number; events: SchoolEvent[] } | null>(
@@ -98,7 +100,7 @@ export function SchoolEventCalendar({
         )}
       >
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-base font-semibold">School Event Calendar</h3>
+          <h3 className="text-base font-semibold">{title}</h3>
           <div className="flex items-center gap-1">
             <Select
               value={String(month)}

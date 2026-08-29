@@ -27,9 +27,10 @@ import { teacherClassLoad } from "@/mock/dashboard";
 import { mockTeacherClasses, mockTeacherSchedule } from "@/mock/portals";
 
 export function TeacherPortalDashboard() {
-  const { user } = useApp();
+  const { user, institution, institutionMode, t } = useApp();
   const { events } = useSchoolEvents();
   const firstName = user.name.split(" ")[0];
+  const isUniversity = institutionMode === "university";
   const pendingAttendance = mockTeacherClasses.filter((c) => c.attendancePending).length;
   const totalStudents = mockTeacherClasses.reduce((sum, c) => sum + c.students, 0);
   const todaySlots = mockTeacherSchedule[0]?.slots ?? [];
@@ -40,7 +41,9 @@ export function TeacherPortalDashboard() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{getGreeting(firstName)}</h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
-            Classes, attendance, marks, and today&apos;s teaching schedule.
+            {institution.shortName} · {isUniversity ? `${t("faculty")} / ${t("section_lead")}` : "Teacher"} portal —
+            classes, attendance, marks
+            {isUniversity ? ", and advising" : ""}.
           </p>
         </div>
         <div className="flex gap-2">
@@ -54,7 +57,12 @@ export function TeacherPortalDashboard() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <ColorStatCard label="Active classes" value={mockTeacherClasses.length} icon={Presentation} tone="purple" />
+        <ColorStatCard
+          label={isUniversity ? "Active sections" : "Active classes"}
+          value={mockTeacherClasses.length}
+          icon={Presentation}
+          tone="purple"
+        />
         <ColorStatCard label="Total students" value={totalStudents} icon={Users} tone="teal" />
         <ColorStatCard
           label="Attendance pending"
@@ -64,11 +72,22 @@ export function TeacherPortalDashboard() {
           icon={ClipboardCheck}
           tone="orange"
         />
-        <ColorStatCard label="Reviews waiting" value={4} change="Applications" changeType="neutral" icon={Inbox} tone="coral" />
+        <ColorStatCard
+          label={isUniversity ? "Advisor reviews" : "Reviews waiting"}
+          value={4}
+          change="Applications"
+          changeType="neutral"
+          icon={Inbox}
+          tone="coral"
+        />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-5">
-        <ChartCard className="xl:col-span-3" title="Weekly class load" subtitle="Students taught per day">
+        <ChartCard
+          className="xl:col-span-3"
+          title="Weekly class load"
+          subtitle="Students taught per day"
+        >
           <PerformanceAreaChart data={teacherClassLoad} />
         </ChartCard>
         <ChartCard className="xl:col-span-2" title="Marks progress" subtitle="Assessment completion">
@@ -78,11 +97,36 @@ export function TeacherPortalDashboard() {
               { name: "Quiz", value: 70 },
               { name: "Mid", value: 40 },
               { name: "Lab", value: 90 },
-              { name: "Final", value: 10 },
             ]}
-            color={CHART_COLORS.violet}
+            color={CHART_COLORS.coral}
           />
         </ChartCard>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="rounded-[1.25rem] bg-[var(--surface)] p-5 shadow-[var(--shadow-sm)]">
+          <h3 className="mb-3 text-base font-semibold">Today&apos;s schedule</h3>
+          <ul className="space-y-2 text-sm">
+            {todaySlots.map((slot) => (
+              <li key={`${slot.time}-${slot.course}`} className="flex items-center justify-between gap-2 border-b border-[var(--border-subtle)] py-2 last:border-0">
+                <div>
+                  <p className="font-medium">{slot.course}</p>
+                  <p className="text-xs text-[var(--muted)]">{slot.room}</p>
+                </div>
+                <Badge variant="outline">{slot.time}</Badge>
+              </li>
+            ))}
+          </ul>
+          {isUniversity ? (
+            <p className="mt-3 text-xs text-[var(--muted)]">
+              {t("section_lead")} assignment is per section + semester — HOD can reassign from Academics → Sections.
+            </p>
+          ) : null}
+        </div>
+        <SchoolEventCalendar
+          events={events}
+          title={isUniversity ? "Academic calendar" : "School event calendar"}
+        />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -90,29 +134,7 @@ export function TeacherPortalDashboard() {
         <BestPerformersCard />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="rounded-[1.25rem] bg-[var(--surface)] p-5 shadow-[var(--shadow-sm)]">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="text-base font-semibold">Today&apos;s classes</h3>
-            <PenLine className="size-4 text-[var(--muted)]" />
-          </div>
-          <div className="space-y-3">
-            {todaySlots.length ? (
-              todaySlots.map((slot) => (
-                <div key={slot.time} className="rounded-xl border border-[var(--border-subtle)] p-3">
-                  <p className="text-sm font-semibold">{slot.course}</p>
-                  <p className="mt-1 text-xs text-[var(--muted)]">{slot.room}</p>
-                  <Badge variant="info" className="mt-2">{slot.time}</Badge>
-                </div>
-              ))
-            ) : (
-              <p className="text-sm text-[var(--muted)]">No classes scheduled for today.</p>
-            )}
-          </div>
-        </div>
-        <DashboardUpcomingEvents />
-        <SchoolEventCalendar events={events} />
-      </div>
+      <DashboardUpcomingEvents />
     </div>
   );
 }

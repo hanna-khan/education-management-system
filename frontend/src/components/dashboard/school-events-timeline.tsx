@@ -95,6 +95,82 @@ export const timelineShowcase: {
   },
 ];
 
+/** University-flavoured showcase for NED / college demos */
+export const timelineShowcaseUniversity: typeof timelineShowcase = [
+  {
+    dateLabel: "03",
+    weekday: "Mon",
+    events: [
+      {
+        id: "tu-1",
+        title: "Convocation rehearsal",
+        tone: "purple",
+        participants: ["AK", "HA", "BH"],
+        more: 120,
+        lane: 0,
+      },
+    ],
+  },
+  {
+    dateLabel: "12",
+    weekday: "Wed",
+    events: [
+      {
+        id: "tu-2",
+        title: "35th Convocation 2026",
+        tone: "green",
+        participants: ["SR", "UF", "FN"],
+        more: 800,
+        lane: 1,
+      },
+      {
+        id: "tu-3",
+        title: "Industry job fair",
+        tone: "orange",
+        participants: ["DT", "RQ", "LH"],
+        more: 45,
+        lane: 2,
+      },
+    ],
+  },
+  {
+    dateLabel: "18",
+    weekday: "Tue",
+    events: [
+      {
+        id: "tu-4",
+        title: "IEEE tech symposium",
+        tone: "blue",
+        participants: ["MS", "TB", "AR"],
+        more: 60,
+        lane: 0,
+      },
+      {
+        id: "tu-5",
+        title: "Sports gala finals",
+        tone: "teal",
+        participants: ["AS", "UK", "OF"],
+        more: 28,
+        lane: 2,
+      },
+    ],
+  },
+  {
+    dateLabel: "25",
+    weekday: "Tue",
+    events: [
+      {
+        id: "tu-6",
+        title: "Semester orientation",
+        tone: "purple",
+        participants: ["ZM", "SI", "BA"],
+        more: 200,
+        lane: 1,
+      },
+    ],
+  },
+];
+
 function ParticipantAvatars({
   participants,
   more,
@@ -152,6 +228,7 @@ export function SchoolEventsTimeline({
   title = "School Events",
   showViewMore = false,
   useShowcase = true,
+  variant = "school",
 }: {
   events?: SchoolEvent[];
   className?: string;
@@ -159,9 +236,12 @@ export function SchoolEventsTimeline({
   showViewMore?: boolean;
   /** Prefer curated Behance layout; falls back to live events when false */
   useShowcase?: boolean;
+  variant?: "school" | "university";
 }) {
+  const showcase = variant === "university" ? timelineShowcaseUniversity : timelineShowcase;
+
   const columns = useMemo(() => {
-    if (useShowcase) return timelineShowcase;
+    if (useShowcase) return showcase;
 
     const sorted = [...(events ?? [])].sort(
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
@@ -174,7 +254,7 @@ export function SchoolEventsTimeline({
     }
 
     const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    return Array.from(byDate.entries())
+    const built = Array.from(byDate.entries())
       .slice(0, 4)
       .map(([date, dayEvents], colIdx) => {
         const d = new Date(date);
@@ -191,7 +271,26 @@ export function SchoolEventsTimeline({
           })),
         };
       });
-  }, [events, useShowcase]);
+
+    // Never render an empty timeline — fall back to curated showcase
+    return built.length > 0 ? built : showcase;
+  }, [events, useShowcase, showcase]);
+
+  if (columns.length === 0) {
+    return (
+      <div
+        className={cn(
+          "rounded-[1.25rem] bg-[var(--surface)] p-5 shadow-[var(--shadow-sm)]",
+          className,
+        )}
+      >
+        <div className="mb-5 flex items-center justify-between">
+          <h3 className="text-lg font-bold text-[#6B58F6]">{title}</h3>
+        </div>
+        <p className="py-10 text-center text-sm text-[var(--muted)]">No upcoming events yet.</p>
+      </div>
+    );
+  }
 
   return (
     <div

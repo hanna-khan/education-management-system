@@ -4,6 +4,7 @@ import Link from "next/link";
 import {
   BookOpen,
   ClipboardCheck,
+  ClipboardPen,
   Trophy,
   Wallet,
 } from "lucide-react";
@@ -31,9 +32,10 @@ import { mockStudentResults, mockExamSchedule } from "@/mock/exams";
 import { mockStudentCourses } from "@/mock/portals";
 
 export function StudentPortalDashboard() {
-  const { user } = useApp();
+  const { user, institution, institutionMode, t, enabledModules } = useApp();
   const { events } = useSchoolEvents();
   const firstName = user.name.split(" ")[0];
+  const isUniversity = institutionMode === "university";
   const avgAttendance = Math.round(
     mockStudentCourses.reduce((sum, c) => sum + c.attendance, 0) /
       Math.max(mockStudentCourses.length, 1),
@@ -45,12 +47,23 @@ export function StudentPortalDashboard() {
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{getGreeting(firstName)}</h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
-            Your academics, attendance, fees, and upcoming exams at a glance.
+            {institution.shortName} student portal — academics, attendance, fees
+            {isUniversity ? ", forms & passes" : ""}.
           </p>
         </div>
-        <Button size="sm" className="rounded-xl" asChild>
-          <Link href="/student/applications">New application</Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {enabledModules.forms !== false ? (
+            <Button size="sm" variant="outline" className="rounded-xl" asChild>
+              <Link href="/student/forms">
+                <ClipboardPen className="mr-1.5 size-3.5" />
+                Forms
+              </Link>
+            </Button>
+          ) : null}
+          <Button size="sm" className="rounded-xl" asChild>
+            <Link href="/student/applications">New application</Link>
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -78,41 +91,38 @@ export function StudentPortalDashboard() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <ChartCard title="This week attendance" subtitle="Daily presence %">
+        <ChartCard className="lg:col-span-1" title="This week attendance" subtitle="Daily">
           <SimpleBarTrend data={studentAttendanceWeekly} color={CHART_COLORS.teal} />
         </ChartCard>
-        <div className="space-y-3 rounded-[1.25rem] bg-[var(--surface)] p-5 shadow-[var(--shadow-sm)]">
-          <h3 className="text-base font-semibold">Upcoming exams</h3>
-          <div className="space-y-3">
-            {mockExamSchedule.slice(0, 4).map((exam) => (
-              <div key={exam.id} className="rounded-xl border border-[var(--border-subtle)] p-3">
-                <p className="text-sm font-semibold">{exam.course}</p>
-                <p className="mt-1 text-xs text-[var(--muted)]">
-                  {exam.date} · {exam.time}
-                </p>
-                <Badge variant="info" className="mt-2">{exam.type}</Badge>
-              </div>
-            ))}
-          </div>
+        <div className="lg:col-span-1">
+          <DashboardUpcomingEvents />
         </div>
+        <SchoolEventCalendar
+          events={events}
+          title={isUniversity ? "Academic calendar" : "School event calendar"}
+        />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
-        <DashboardUpcomingEvents />
-        <SchoolEventCalendar events={events} />
-        <ChartCard title="My courses" subtitle="Current enrollment">
-          <div className="space-y-3">
-            {mockStudentCourses.slice(0, 5).map((course) => (
-              <div key={course.code} className="flex items-center justify-between rounded-xl bg-[var(--surface-muted)] px-3 py-2.5">
-                <div>
-                  <p className="text-sm font-medium">{course.name}</p>
-                  <p className="text-xs text-[var(--muted)]">{course.code} · {course.instructor}</p>
-                </div>
-                <span className="text-sm font-semibold text-[#6B58F6]">{course.attendance}%</span>
-              </div>
-            ))}
-          </div>
-        </ChartCard>
+      <div className="rounded-[1.25rem] bg-[var(--surface)] p-5 shadow-[var(--shadow-sm)]">
+        <div className="mb-3 flex items-center justify-between">
+          <h3 className="text-base font-semibold">Upcoming exams</h3>
+          <Button asChild size="sm" variant="outline" className="rounded-xl">
+            <Link href="/student/exams">All exams</Link>
+          </Button>
+        </div>
+        <ul className="space-y-2 text-sm">
+          {mockExamSchedule.slice(0, 4).map((exam) => (
+            <li key={exam.id} className="flex items-center justify-between gap-3 border-b border-[var(--border-subtle)] py-2 last:border-0">
+              <span className="font-medium">{exam.course}</span>
+              <Badge variant="outline">{exam.date}</Badge>
+            </li>
+          ))}
+        </ul>
+        {isUniversity ? (
+          <p className="mt-3 text-xs text-[var(--muted)]">
+            Your {t("section_lead")} can help with course advising from the Advising module.
+          </p>
+        ) : null}
       </div>
     </div>
   );
