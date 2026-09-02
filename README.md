@@ -1,29 +1,40 @@
 # Education Management System
 
-Multi-tenant Education Operations & Student Lifecycle SaaS — part of the **Zendrock** workspace.
+Multi-tenant Education Operations & Student Lifecycle SaaS — part of **Zendrock**.
 
 ## Structure
 
 ```
 education-management-system/
-├── frontend/     # Next.js + TypeScript + Tailwind (Phase 1: interactive mockup)
-└── backend/      # Laravel + MySQL (Phase 2 — not started)
+├── frontend/     # Next.js — API-only for Phase 1–2 (no mock fallback)
+├── backend/      # Laravel 13 + Sanctum
+└── PHASES.md     # Full endpoint + flow catalogue
 ```
 
-## Phase 1 — Frontend Mockup
+## What’s dynamic (Phase 1 + 2)
 
-The frontend uses static mock data and a service layer designed to swap to Laravel REST APIs later (`/api/v1/*`).
+- Auth, students, teachers, academics, platform institutions
+- Admissions → enroll, attendance, exams/results, fees/scholarships, applications/workflows, notices
+- **Institution self-registration**: plan → tenant → admin → campus → trial subscription → onboarding
 
-### Run locally
+See **[PHASES.md](./PHASES.md)** for every endpoint and flow.
+
+## Run
 
 ```bash
-cd frontend
+cd backend
+php artisan migrate:fresh --seed
+php artisan serve
+
+cd ../frontend
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+- Register: http://localhost:3000/register  
+- Login: http://localhost:3000/login (empty form — no prefills)  
+- Seeded demo admin (optional): `ayesha.malik@neddemo.edu.pk` / `password`
 
-## Demo institution
+## Next
 
-**NED Demo University** — fictional demo data for product demonstrations.
+**Phase 3** — Teacher / Student / Parent portal APIs; remaining campus modules off mocks.

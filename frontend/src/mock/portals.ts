@@ -356,6 +356,7 @@ export const SETTINGS_TABS = [
   { id: "academic", label: "Academic", href: "/settings/academic" },
   { id: "modules", label: "Modules", href: "/settings/modules" },
   { id: "users", label: "Users", href: "/settings/users" },
+  { id: "staff", label: "Staff & invites", href: "/settings/staff" },
   { id: "roles", label: "Roles", href: "/settings/roles" },
   { id: "import", label: "Import Data", href: "/settings/import" },
   { id: "subscription", label: "Subscription", href: "/settings/subscription" },

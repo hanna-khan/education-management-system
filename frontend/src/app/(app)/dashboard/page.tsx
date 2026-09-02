@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Bed,
   Bus,
@@ -34,6 +34,7 @@ import {
   getRoleDashboardExtras,
   type DashboardStat,
 } from "@/mock/dashboard-context";
+import { api } from "@/lib/api";
 
 const ICON_MAP: Record<DashboardStat["icon"], LucideIcon> = {
   users: Users,
@@ -48,10 +49,22 @@ const ICON_MAP: Record<DashboardStat["icon"], LucideIcon> = {
 };
 
 export default function DashboardPage() {
-  const { user, institution, institutionMode, t, roleLabel, demoRoleKey, enabledModules } = useApp();
+  const { user, institution, institutionMode, t, roleLabel, enabledModules, isAuthenticated } =
+    useApp();
   const { events, upcomingEvents } = useSchoolEvents();
   const firstName = user.name.split(" ")[0];
   const [financePeriod, setFinancePeriod] = useState<"weekly" | "monthly">("weekly");
+  const [liveCounts, setLiveCounts] = useState<{ students: number; teachers: number } | null>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    api<{ students: number; teachers: number }>("/dashboard")
+      .then((d) => setLiveCounts({ students: d.students, teachers: d.teachers }))
+      .catch(() => setLiveCounts(null));
+  }, [isAuthenticated]);
+
+  const studentCount = liveCounts?.students ?? institution.studentCount;
+  const staffCount = liveCounts?.teachers ?? institution.staffCount;
 
   const roleExtras = getRoleDashboardExtras(user.role, institutionMode);
   const baseStats =
@@ -59,8 +72,8 @@ export default function DashboardPage() {
       ? roleExtras
       : getInstitutionDashboardStats(
           institutionMode,
-          institution.studentCount,
-          institution.staffCount,
+          studentCount,
+          staffCount,
           Math.max(events.length, upcomingEvents.length),
         );
 
@@ -83,7 +96,7 @@ export default function DashboardPage() {
       <MockActionButton
         label={isUniversity ? "New admission" : "New Admission"}
         title="New admission application"
-        description="Create a new admission application (demo)."
+        description="Create a new admission application."
         fields={MOCK_FORMS.admission}
         submitLabel="Create application"
         className="rounded-xl"
@@ -96,11 +109,11 @@ export default function DashboardPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-[var(--foreground)] sm:text-[1.75rem]">
-            {institution.shortName} dashboard
+            {institution.shortName || "Institution"} dashboard
           </h1>
           <p className="mt-1 text-sm text-[var(--muted)]">
-            {getGreeting(firstName)} · viewing as {roleLabel(user.role, demoRoleKey)} ·{" "}
-            <span className="capitalize">{institutionMode}</span> mode
+            {getGreeting(firstName)} · {roleLabel(user.role)} ·{" "}
+            <span className="capitalize">{institutionMode}</span>
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -169,11 +182,15 @@ export default function DashboardPage() {
           <div className="mb-2 flex gap-6">
             <div>
               <p className="text-xs text-[var(--muted)]">Income</p>
-              <p className="text-lg font-bold text-[#1BD0B4]">{formatCurrency(isUniversity ? 12840000 : 469244)}</p>
+              <p className="text-lg font-bold text-[#1BD0B4]">
+                {formatCurrency(isUniversity ? 12840000 : 469244)}
+              </p>
             </div>
             <div>
               <p className="text-xs text-[var(--muted)]">Expense</p>
-              <p className="text-lg font-bold text-[#F4901F]">{formatCurrency(isUniversity ? 4120000 : 33456)}</p>
+              <p className="text-lg font-bold text-[#F4901F]">
+                {formatCurrency(isUniversity ? 4120000 : 33456)}
+              </p>
             </div>
           </div>
           <FinanceLineChart data={financeWeekly} />

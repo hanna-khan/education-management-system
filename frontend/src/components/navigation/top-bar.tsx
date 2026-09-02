@@ -49,13 +49,13 @@ export function TopBar({ onMobileMenuToggle }: TopBarProps) {
     sidebarCollapsed,
     themePreset,
     roleLabel,
-    demoRoleKey,
+    clearSession,
   } = useApp();
   const [searchOpen, setSearchOpen] = useState(false);
   const notifications =
-    user.role === "parent" ? mockParentNotifications : mockNotifications;
+    user?.role === "parent" ? mockParentNotifications : mockNotifications;
   const unreadCount = notifications.filter((item) => !item.read).length;
-  const initials = user.name
+  const initials = (user?.name || "U")
     .split(" ")
     .map((part) => part[0])
     .join("")
@@ -194,20 +194,20 @@ export function TopBar({ onMobileMenuToggle }: TopBarProps) {
                   </AvatarFallback>
                 </Avatar>
                 <div className="hidden text-left sm:block">
-                  <p className="text-sm font-semibold leading-none text-[#3D3558]">{user.name}</p>
-                  <p className="mt-1 text-[11px] text-[#8B86A3]">{roleLabel(user.role, demoRoleKey)}</p>
+                  <p className="text-sm font-semibold leading-none text-[#3D3558]">{user?.name}</p>
+                  <p className="mt-1 text-[11px] text-[#8B86A3]">{user ? roleLabel(user.role) : ""}</p>
                 </div>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64 rounded-2xl">
               <DropdownMenuLabel>
                 <div>
-                  <p>{user.name}</p>
-                  <p className="mt-1 text-xs font-normal text-[var(--muted)]">{user.email}</p>
+                  <p>{user?.name}</p>
+                  <p className="mt-1 text-xs font-normal text-[var(--muted)]">{user?.email}</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>{institution.name}</DropdownMenuItem>
+              <DropdownMenuItem>{institution?.name}</DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/account/profile">Profile settings</Link>
               </DropdownMenuItem>
@@ -218,8 +218,13 @@ export function TopBar({ onMobileMenuToggle }: TopBarProps) {
                 <Link href="/account/settings">Account settings</Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/login">Sign out</Link>
+              <DropdownMenuItem
+                onClick={() => {
+                  clearSession();
+                  window.location.href = "/login";
+                }}
+              >
+                Sign out
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -240,7 +245,11 @@ export function MobileSidebarOverlay({
 }) {
   const { user, themePreset, institutionMode, enabledModules } = useApp();
   const pathname = usePathname();
-  const navigation = getNavigationForRole(user.role, institutionMode, enabledModules);
+  const navigation = getNavigationForRole(
+    user?.role ?? "institution_admin",
+    institutionMode,
+    enabledModules,
+  );
   const coloredSidebar = Boolean(getThemePreset(themePreset).coloredSidebar);
 
   return (

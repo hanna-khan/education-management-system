@@ -16,7 +16,11 @@ import { useState } from "react";
 export function Sidebar() {
   const pathname = usePathname();
   const { user, sidebarCollapsed, themePreset, institutionMode, enabledModules } = useApp();
-  const navigation = getNavigationForRole(user.role, institutionMode, enabledModules);
+  const navigation = getNavigationForRole(
+    user?.role ?? "institution_admin",
+    institutionMode,
+    enabledModules,
+  );
   const coloredSidebar = getThemePreset(themePreset).coloredSidebar;
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
     academics: true,
@@ -74,7 +78,7 @@ export function Sidebar() {
       </div>
 
       {/* Institution — glass chip, no black logo, no border line */}
-      {!sidebarCollapsed && user.role !== "platform_admin" ? (
+      {!sidebarCollapsed && user?.role !== "platform_admin" ? (
         <div className={cn(coloredSidebar ? "px-3 pb-3 pt-2" : "border-b border-[var(--sidebar-border)] p-3")}>
           <InstitutionSwitcher compact tone={coloredSidebar ? "onBrand" : "default"} />
         </div>

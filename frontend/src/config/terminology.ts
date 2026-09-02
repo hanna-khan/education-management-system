@@ -71,6 +71,9 @@ export function getRoleDisplayLabel(
   if (demoKey === "principal" || role === "principal") {
     return t.campus_head_role;
   }
+  if (role === "vice_principal") {
+    return institutionType === "university" ? "Deputy Campus Head" : "Vice Principal";
+  }
   if (demoKey === "teacher" || role === "teacher") {
     return institutionType === "university" ? "Faculty / Advisor" : "Teacher";
   }

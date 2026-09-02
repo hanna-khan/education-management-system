@@ -6,6 +6,7 @@ export type UserRole =
   | "super_admin"
   | "institution_admin"
   | "principal"
+  | "vice_principal"
   | "dean"
   | "hod"
   | "teacher"
@@ -35,13 +36,51 @@ export interface Institution {
   type: InstitutionType;
   status: InstitutionStatus;
   logoInitials: string;
+  logoUrl?: string | null;
   primaryColor: string;
   secondaryColor: string;
   city: string;
   studentCount: number;
   staffCount: number;
+  slug?: string;
   /** Optional demo blurb shown in the institution switcher */
   demoNote?: string;
+  /** Enabled module map from API */
+  modules?: Record<string, boolean>;
+  onboardingCompleted?: boolean;
+  onboardingStep?: number;
+  contactEmail?: string;
+  contactPhone?: string;
+  subscription?: {
+    id: string;
+    status: string;
+    billingCycle?: string;
+    trialEndsAt?: string;
+    endsAt?: string;
+    plan?: {
+      id: string;
+      name: string;
+      code: string;
+      maxCampuses?: number;
+      maxStudents?: number;
+      maxStaff?: number;
+      modules?: Record<string, boolean>;
+    };
+  };
+  access?: {
+    locked?: boolean;
+    reason?: string | null;
+    trialDaysLeft?: number | null;
+    status?: string | null;
+    trialEndsAt?: string;
+    endsAt?: string;
+    plan?: {
+      id: string;
+      name: string;
+      code: string;
+      modules?: Record<string, boolean>;
+    } | null;
+  };
 }
 
 export interface User {

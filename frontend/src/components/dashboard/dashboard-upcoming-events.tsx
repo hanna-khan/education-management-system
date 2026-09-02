@@ -10,7 +10,7 @@ export function DashboardUpcomingEvents() {
   const { user } = useApp();
   const { dashboardEvents, upcomingEvents } = useSchoolEvents();
   const [createOpen, setCreateOpen] = useState(false);
-  const canManage = canManageEvents(user.role);
+  const canManage = canManageEvents(user?.role ?? "institution_admin");
   const moreCount = Math.max(0, upcomingEvents.length - dashboardEvents.length);
 
   return (
